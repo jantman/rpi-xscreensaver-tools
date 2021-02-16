@@ -32,9 +32,6 @@ SOFTWARE.
 """
 
 import os
-import argparse
-import sys
-import traceback
 from time import sleep
 import struct
 import ctypes
