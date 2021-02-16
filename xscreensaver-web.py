@@ -32,7 +32,6 @@ SOFTWARE.
 """
 
 import os
-from time import sleep
 import struct
 import ctypes
 import logging
