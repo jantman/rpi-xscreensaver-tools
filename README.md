@@ -22,6 +22,8 @@ This is specific to Raspberry Pis using the official 7" Touchscreen display.
 
 See ``xscreensaver-rpi-backlight.py --help`` for usage information.
 
+By default the daemon will sleep for 10 seconds at startup, in order to let xscreensaver start and stabilize. This can be overridden by command-line options.
+
 ## xscreensaver-web.py
 
 This is a tiny Flask web server that provides status and control of xscreensaver via a HTTP interface. I use my touchscreen Pis as interfaces for [HomeAssistant](https://www.home-assistant.io/), and this allows me to put a button on the web-based HomeAssistant UI to activate the screensaver on the actual device I'm using. A bit crazy, but it works. It uses ``xscreensaver-command`` for querying and control. By default it listens on port 8080, but that can be overridden by setting the ``FLASK_PORT`` environment variable. For my purposes, once again, I run this via a line in my ``~/.config/lxsession/LXDE-pi/autostart`` after starting xscreensaver.

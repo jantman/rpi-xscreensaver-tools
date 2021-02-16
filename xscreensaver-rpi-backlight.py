@@ -36,6 +36,7 @@ import sys
 import argparse
 import logging
 import subprocess
+import time
 from rpi_backlight import Backlight
 
 FORMAT = "[%(asctime)s %(levelname)s] %(message)s"
@@ -71,7 +72,10 @@ class XScreensaverRpiBacklight:
             f'{p.stdout.decode()}'
         )
 
-    def run(self, dim=5, bright=100):
+    def run(self, dim=5, bright=100, sleep=10.0):
+        if sleep > 0:
+            logger.warning('Sleeping for %s seconds', sleep)
+            time.sleep(sleep)
         current = self._is_screen_blanked()
         if current:
             logger.info('Set initial backlight to dim state (%d)', dim)
@@ -109,6 +113,10 @@ def parse_args(argv):
                    default=100,
                    help='Backlight level when bright, 0 to 100. Default is '
                         '100, max brightness.')
+    p.add_argument('-s', '--sleep', dest='sleep', action='store', type=float,
+                   default=10.0,
+                   help='Seconds to sleep at startup, for screensaver to '
+                        'stabilize.')
     args = p.parse_args(argv)
     if not 0 < args.dim < 101 or not 0 < args.bright < 101:
         raise ValueError(
@@ -153,4 +161,6 @@ if __name__ == "__main__":
         set_log_debug()
     elif args.verbose == 1:
         set_log_info()
-    XScreensaverRpiBacklight().run(dim=args.dim, bright=args.bright)
+    XScreensaverRpiBacklight().run(
+        dim=args.dim, bright=args.bright, sleep=args.sleep
+    )
