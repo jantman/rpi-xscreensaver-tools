@@ -33,6 +33,7 @@ SOFTWARE.
 """
 
 import sys
+import os
 import argparse
 import logging
 import subprocess
@@ -42,6 +43,9 @@ from rpi_backlight import Backlight
 FORMAT = "[%(asctime)s %(levelname)s] %(message)s"
 logging.basicConfig(level=logging.WARNING, format=FORMAT)
 logger = logging.getLogger()
+
+if 'DISPLAY' not in os.environ:
+    os.environ['DISPLAY'] = ':0'
 
 
 class XScreensaverRpiBacklight:
@@ -56,27 +60,42 @@ class XScreensaverRpiBacklight:
     def _is_screen_blanked(self):
         logger.debug('Getting current state of screensaver')
         p = subprocess.run(
-            ['xscreensaver-command', '-time'], stdout=subprocess.PIPE
+            ['xscreensaver-command', '-time'], stdout=subprocess.PIPE,
+            universal_newlines=True
         )
         logger.debug('Command output: %s', p.stdout)
-        if 'screen blanked since' in p.stdout.decode():
+        if 'screen blanked since' in p.stdout:
             logger.info('Screen is currently blanked (screensaver active)')
             return True
-        if 'screen non-blanked since' in p.stdout.decode():
+        if 'screen non-blanked since' in p.stdout:
             logger.info(
                 'Screen is currently not blanked (screensaver inactive)'
             )
             return False
+        logger.error(
+            'ERROR: Unable to determine screensaver state from output: '
+            f'{p.stdout}'
+        )
         raise RuntimeError(
             'ERROR: Unable to determine screensaver state from output: '
-            f'{p.stdout.decode()}'
+            f'{p.stdout}'
         )
 
     def run(self, dim=5, bright=100, sleep=10.0):
         if sleep > 0:
             logger.warning('Sleeping for %s seconds', sleep)
             time.sleep(sleep)
-        current = self._is_screen_blanked()
+        for i in range(0, 10):
+            try:
+                current = self._is_screen_blanked()
+            except RuntimeError:
+                if i == 9:
+                    raise
+                logger.error(
+                    'ERROR: Unable to determine screensaver state; '
+                    'sleeping %s seconds', sleep
+                )
+                time.sleep(sleep)
         if current:
             logger.info('Set initial backlight to dim state (%d)', dim)
             self.backlight.brightness = dim
